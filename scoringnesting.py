@@ -13,6 +13,7 @@ papier_scores = []
 coton_scores = []
 nid_scores = []
 hauteur_scores = []
+tunnel_scores = []
 
 # Formulaire interactif pour chaque souris
 for i in range(nombre_souris):
@@ -23,6 +24,10 @@ for i in range(nombre_souris):
     nid = st.slider(f"Score final du nid (0-5)", 0, 5, key=f"nid{i}")
     hauteur = st.number_input(f"Hauteur du nid (cm) pour {nom}", min_value=0.0, step=0.1, key=f"hauteur{i}")
 
+    # 🔹 Nouvelle variable : Utilisation du Tunnel (Oui/Non)
+    tunnel = st.radio(f"{nom} a-t-elle utilisé le tunnel comme nid ?", ["Non", "Oui"], key=f"tunnel{i}")
+    tunnel_score = 1 if tunnel == "Oui" else 0
+
     # Normalisation de la hauteur du nid (échelle de 0 à 5)
     max_hauteur = 10  # Hauteur maximale attendue (modifiable)
     score_hauteur = min((hauteur / max_hauteur) * 5, 5)
@@ -32,6 +37,7 @@ for i in range(nombre_souris):
     coton_scores.append(coton)
     nid_scores.append(nid)
     hauteur_scores.append(score_hauteur)
+    tunnel_scores.append(tunnel_score)
 
 # Bouton pour générer et télécharger le fichier Excel
 if st.button("📂 Générer le fichier Excel"):
@@ -40,14 +46,15 @@ if st.button("📂 Générer le fichier Excel"):
         "Papier_Score": papier_scores,
         "Coton_Score": coton_scores,
         "Score_Nid": nid_scores,
-        "Hauteur_Nid (cm)": hauteur_scores
+        "Hauteur_Nid (cm)": hauteur_scores,
+        "Tunnel_Utilisé": tunnel_scores
     }
 
     df = pd.DataFrame(data)
 
     # 🧮 Calcul des scores
     df["Score_Materiaux"] = (df["Papier_Score"] + df["Coton_Score"]) / 2
-    df["Score_Nid_Ajusté"] = (0.7 * df["Score_Nid"]) + (0.3 * df["Hauteur_Nid (cm)"])
+    df["Score_Nid_Ajusté"] = (0.6 * df["Score_Nid"]) + (0.25 * df["Hauteur_Nid (cm)"]) + (0.15 * df["Tunnel_Utilisé"])
     df["Score_Final"] = (0.4 * df["Score_Materiaux"]) + (0.6 * df["Score_Nid_Ajusté"])
 
     # Sauvegarde du fichier Excel
@@ -57,4 +64,3 @@ if st.button("📂 Générer le fichier Excel"):
     # Affichage des résultats
     st.success("✅ Fichier Excel généré avec succès !")
     st.download_button("📥 Télécharger le fichier Excel", open(file_path, "rb"), file_name="Scoring_Nesting.xlsx")
-
